@@ -1,0 +1,121 @@
+@model Ecobox.ViewModels.DashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+    var aprovechablesEstado = Model.ContenedorAprovechables.Estado switch
+    {
+        "VACÍA" => "status-empty",
+        "POR LLENARSE" => "status-warning",
+        "REQUIERE CAMBIO" => "status-danger",
+        _ => "status-ready"
+    };
+    var noAprovechablesEstado = Model.ContenedorNoAprovechables.Estado switch
+    {
+        "VACÍA" => "status-empty",
+        "POR LLENARSE" => "status-warning",
+        "REQUIERE CAMBIO" => "status-danger",
+        _ => "status-ready"
+    };
+}
+
+<div class="container-xl page-shell dashboard-page">
+    <section class="page-heading">
+        <div>
+            <p class="eyebrow">SEPARACIÓN INTELIGENTE DE RESIDUOS</p>
+            <h1>Panel EcoBox</h1>
+            <p class="heading-copy">Contenedor inteligente para la separación de residuos.</p>
+        </div>
+    </section>
+
+    <div class="data-notice @(Model.BaseDatosDisponible ? "notice-connected" : "notice-pending")" role="status">
+        <span class="notice-dot" aria-hidden="true"></span>
+        <span>@Model.MensajeBaseDatos</span>
+    </div>
+
+    <section class="dashboard-grid" aria-label="Resumen EcoBox">
+        <article class="panel latest-panel">
+            <div class="panel-heading">
+                <div>
+                    <p class="eyebrow">ACTIVIDAD RECIENTE</p>
+                    <h2>Último residuo ingresado</h2>
+                </div>
+                <span class="icon-tile icon-green" aria-hidden="true">↘</span>
+            </div>
+            @if (Model.UltimoResiduo is null)
+            {
+                <div class="empty-latest">
+                    <span class="empty-symbol" aria-hidden="true">◇</span>
+                    <p>No hay residuos registrados todavía.</p>
+                    <span>Cuando se integre la clasificación, los registros aparecerán aquí.</span>
+                </div>
+            }
+            else
+            {
+                <div class="latest-result">
+                    <span class="category-pill @(Model.UltimoResiduo.Clasificacion == "APROVECHABLE" ? "category-green" : "category-blue")">@Model.UltimoResiduo.Clasificacion</span>
+                    <p class="latest-date">@Model.UltimoResiduo.FechaHoraDeteccion.ToLocalTime().ToString("dd/MM/yyyy")</p>
+                    <p class="latest-time">@Model.UltimoResiduo.FechaHoraDeteccion.ToLocalTime().ToString("hh:mm tt")</p>
+                    <div class="confidence-line"><span>Confianza de clasificación</span><strong>@((Model.UltimoResiduo.ConfianzaClasificacion * 100).ToString("0.#")) %</strong></div>
+                </div>
+            }
+        </article>
+
+        <article class="panel total-panel">
+            <div class="panel-heading">
+                <div>
+                    <p class="eyebrow">REGISTROS ACUMULADOS</p>
+                    <h2>Total de residuos</h2>
+                </div>
+                <span class="icon-tile icon-blue" aria-hidden="true">▤</span>
+            </div>
+            <div class="total-number">@Model.TotalResiduos</div>
+            <p class="muted-copy">Residuos clasificados y registrados</p>
+            <div class="total-breakdown">
+                <div><span class="legend-dot legend-green"></span><span>Aprovechables</span><strong>@Model.TotalAprovechables</strong></div>
+                <div><span class="legend-dot legend-blue"></span><span>No aprovechables</span><strong>@Model.TotalNoAprovechables</strong></div>
+            </div>
+        </article>
+    </section>
+
+    <section class="bins-section">
+        <div class="section-heading">
+            <div><p class="eyebrow">ESTADO DE CONTENEDORES</p><h2>Residuos por caneca</h2></div>
+            <span class="section-note">Capacidad estimada a partir de los registros</span>
+        </div>
+        <div class="bin-grid">
+            <article class="panel bin-card">
+                <div class="bin-card-top">
+                    <span class="bin-icon bin-icon-green" aria-hidden="true">
+                        <svg viewBox="0 0 48 48" fill="none"><path d="M12 16h24l-2 25H14l-2-25Z" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><path d="M9 12h30M19 12V8h10v4m-7 9v14m6-14v14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><path d="M24 5c-4 3.1-5.2 6-3.6 8.1 1.6 2.1 5.2 1.7 7.5-.2C30.3 11.1 28.4 7.9 24 5Z" fill="currentColor"/></svg>
+                    </span>
+                    <span class="status-pill @aprovechablesEstado">@Model.ContenedorAprovechables.Estado</span>
+                </div>
+                <h3>Caneca aprovechable</h3>
+                <p class="bin-subtitle">Materiales que pueden recuperarse</p>
+                <div class="bin-count"><strong>@Model.ContenedorAprovechables.NivelActual</strong><span>residuos registrados</span></div>
+                <div class="capacity-label"><span>Capacidad estimada</span><strong>@Model.ContenedorAprovechables.PorcentajeEstimado.ToString("0.#") %</strong></div>
+                <div class="progress eco-progress" role="progressbar" aria-label="Capacidad estimada de aprovechables" aria-valuenow="@Math.Min(100, Model.ContenedorAprovechables.PorcentajeEstimado)" aria-valuemin="0" aria-valuemax="100">
+                    <div class="progress-bar progress-green" style="width: @Math.Clamp(Model.ContenedorAprovechables.PorcentajeEstimado, 0, 100)%"></div>
+                </div>
+                <p class="capacity-footnote">@Model.ContenedorAprovechables.NivelActual de @Model.ContenedorAprovechables.CapacidadMaxima · estimación lógica</p>
+            </article>
+
+            <article class="panel bin-card">
+                <div class="bin-card-top">
+                    <span class="bin-icon bin-icon-blue" aria-hidden="true">
+                        <svg viewBox="0 0 48 48" fill="none"><path d="M12 16h24l-2 25H14l-2-25Z" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><path d="M9 12h30M19 12V8h10v4m-7 9v14m6-14v14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><path d="M24 5c-4 3.1-5.2 6-3.6 8.1 1.6 2.1 5.2 1.7 7.5-.2C30.3 11.1 28.4 7.9 24 5Z" fill="currentColor"/></svg>
+                    </span>
+                    <span class="status-pill @noAprovechablesEstado">@Model.ContenedorNoAprovechables.Estado</span>
+                </div>
+                <h3>Caneca no aprovechable</h3>
+                <p class="bin-subtitle">Residuos que no se pueden recuperar</p>
+                <div class="bin-count"><strong>@Model.ContenedorNoAprovechables.NivelActual</strong><span>residuos registrados</span></div>
+                <div class="capacity-label"><span>Capacidad estimada</span><strong>@Model.ContenedorNoAprovechables.PorcentajeEstimado.ToString("0.#") %</strong></div>
+                <div class="progress eco-progress" role="progressbar" aria-label="Capacidad estimada de no aprovechables" aria-valuenow="@Math.Min(100, Model.ContenedorNoAprovechables.PorcentajeEstimado)" aria-valuemin="0" aria-valuemax="100">
+                    <div class="progress-bar progress-blue" style="width: @Math.Clamp(Model.ContenedorNoAprovechables.PorcentajeEstimado, 0, 100)%"></div>
+                </div>
+                <p class="capacity-footnote">@Model.ContenedorNoAprovechables.NivelActual de @Model.ContenedorNoAprovechables.CapacidadMaxima · estimación lógica</p>
+            </article>
+        </div>
+        <p class="estimate-disclaimer"><span aria-hidden="true">ⓘ</span> El nivel es un conteo de residuos registrados y no una medición física del contenedor.</p>
+    </section>
+</div>

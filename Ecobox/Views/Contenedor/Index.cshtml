@@ -1,0 +1,21 @@
+@model Ecobox.ViewModels.DashboardViewModel
+@{
+    ViewData["Title"] = "Contenedores";
+}
+<div class="container-xl page-shell">
+    <section class="page-heading"><div><p class="eyebrow">CAPACIDAD LÓGICA</p><h1>Contenedores</h1><p class="heading-copy">El estado se calcula según los residuos registrados.</p></div></section>
+    <div class="data-notice @(Model.BaseDatosDisponible ? "notice-connected" : "notice-pending")" role="status"><span class="notice-dot" aria-hidden="true"></span><span>@Model.MensajeBaseDatos</span></div>
+    <div class="bin-grid bin-grid-page">
+        @foreach (var container in new[] { Model.ContenedorAprovechables, Model.ContenedorNoAprovechables })
+        {
+            <article class="panel bin-card">
+                <span class="status-pill @(container.Estado == "VACÍA" ? "status-empty" : container.Estado == "POR LLENARSE" ? "status-warning" : container.Estado == "REQUIERE CAMBIO" ? "status-danger" : "status-ready")">@container.Estado</span>
+                <h2>@container.Nombre</h2>
+                <div class="bin-count"><strong>@container.NivelActual</strong><span>residuos registrados</span></div>
+                <div class="capacity-label"><span>Capacidad estimada</span><strong>@container.PorcentajeEstimado.ToString("0.#") %</strong></div>
+                <div class="progress eco-progress"><div class="progress-bar progress-green" style="width: @Math.Clamp(container.PorcentajeEstimado, 0, 100)%"></div></div>
+                <p class="capacity-footnote">@container.NivelActual de @container.CapacidadMaxima · estimación lógica</p>
+            </article>
+        }
+    </div>
+</div>

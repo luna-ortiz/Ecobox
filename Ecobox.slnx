@@ -1,3 +1,4 @@
 <Solution>
   <Project Path="Ecobox/Ecobox.csproj" />
+  <Project Path="EcoBox.CameraWorker/EcoBox.CameraWorker.csproj" />
 </Solution>
