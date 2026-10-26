@@ -1,78 +1,70 @@
 using Ecobox.Configuration;
 using Ecobox.Data;
-using Ecobox.Models;
 using Ecobox.Services;
 using Ecobox.Services.Interfaces;
-using System.Diagnostics;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllersWithViews();
-builder.Services.Configure<ContenedorSettings>(builder.Configuration.GetSection(ContenedorSettings.SectionName));
-
-var connectionString = builder.Configuration.GetConnectionString("EcoBox");
-builder.Services.AddDbContext<EcoBoxDbContext>(options =>
+if (builder.Environment.IsDevelopment())
 {
-    if (!string.IsNullOrWhiteSpace(connectionString))
-    {
-        options.UseNpgsql(connectionString);
-    }
-});
+    // Keep local diagnostics in the terminal instead of attempting to write to Windows Event Log.
+    builder.Logging.ClearProviders();
+    builder.Logging.AddConsole();
+}
 
-builder.Services.AddScoped<IDatabaseStatusService, DatabaseStatusService>();
+builder.Services.AddControllersWithViews();
+
+var databaseDirectory = Path.Combine(builder.Environment.ContentRootPath, "Data");
+Directory.CreateDirectory(databaseDirectory);
+var databasePath = Path.Combine(databaseDirectory, "ecobox.db");
+
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(databaseDirectory, "DataProtection-Keys")))
+    .SetApplicationName("EcoBox");
+
+builder.Services.AddDbContext<EcoBoxDbContext>(options =>
+    options.UseSqlite($"Data Source={databasePath}"));
+
+builder.Services.Configure<VisionSettings>(builder.Configuration.GetSection(VisionSettings.SectionName));
+builder.Services.Configure<ArduinoSettings>(builder.Configuration.GetSection(ArduinoSettings.SectionName));
+
+builder.Services.AddScoped<IRegistroResiduoService, RegistroResiduoService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
-builder.Services.AddScoped<IContenedorService, ContenedorService>();
-builder.Services.AddScoped<IResiduoService, ResiduoService>();
+builder.Services.AddScoped<IVisionService, VisionService>();
 builder.Services.AddScoped<IArduinoService, ArduinoService>();
+builder.Services.AddScoped<IPresenceDetectionService, PresenceDetectionService>();
+builder.Services.AddScoped<IClasificacionResiduoService, ClasificacionResiduoService>();
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment() && OperatingSystem.IsWindows() && Environment.UserInteractive)
+await using (var scope = app.Services.CreateAsyncScope())
 {
-    var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("EcoBox.Camera");
-    try
-    {
-        Process.Start(new ProcessStartInfo("microsoft.windows.camera:")
-        {
-            UseShellExecute = true
-        });
-        logger.LogInformation("Se abrió la aplicación Cámara de Windows junto con EcoBox.");
-    }
-    catch (Exception exception)
-    {
-        logger.LogWarning(exception, "No se pudo abrir automáticamente la aplicación Cámara de Windows.");
-    }
-}
-
-if (!string.IsNullOrWhiteSpace(connectionString))
-{
-    await using var scope = app.Services.CreateAsyncScope();
-    var logger = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("EcoBox.Database");
-    try
-    {
-        await DatabaseInitializer.InitializeAsync(
-            scope.ServiceProvider.GetRequiredService<EcoBoxDbContext>(),
-            scope.ServiceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<ContenedorSettings>>().Value);
-    }
-    catch (Exception exception)
-    {
-        logger.LogWarning(exception, "No fue posible inicializar PostgreSQL. La aplicación seguirá disponible sin conexión a la base de datos.");
-    }
+    var dbContext = scope.ServiceProvider.GetRequiredService<EcoBoxDbContext>();
+    await DatabaseInitializer.InitializeAsync(dbContext);
 }
 
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
+    app.UseHttpsRedirection();
 }
 
-app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
 
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
+app.Lifetime.ApplicationStarted.Register(() =>
+{
+    foreach (var address in app.Urls)
+    {
+        Console.WriteLine($"EcoBox disponible en: {address}");
+    }
+});
 
 app.Run();

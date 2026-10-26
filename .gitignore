@@ -62,6 +62,10 @@ BenchmarkDotNet.Artifacts/
 project.lock.json
 project.fragment.lock.json
 artifacts/
+*.db
+*.db-shm
+*.db-wal
+/Ecobox/Data/DataProtection-Keys/
 
 # ASP.NET Scaffolding
 ScaffoldingReadMe.txt

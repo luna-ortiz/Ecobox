@@ -184,11 +184,30 @@ a { color: var(--eco-green); }
 .site-footer a { color: var(--eco-green); text-decoration: none; }
 .site-footer a:hover { text-decoration: underline; }
 
+.camera-grid { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(280px, .55fr); gap: 20px; }
+.camera-panel, .camera-status-panel { min-width: 0; }
+.camera-frame { position: relative; display: grid; min-height: 280px; margin-top: 22px; overflow: hidden; place-items: center; border: 1px solid #e4ebe6; border-radius: 13px; background: #17211b; aspect-ratio: 16 / 9; }
+.camera-frame video { display: block; width: 100%; height: 100%; object-fit: contain; }
+.camera-placeholder { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #e1eae3; text-align: center; }
+.camera-placeholder[hidden] { display: none; }
+.camera-placeholder span { color: #94b69a; font-size: 2.2rem; }
+.camera-placeholder p { margin: 8px 0 0; font-weight: 600; }
+.camera-controls { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 17px; }
+.camera-controls button:disabled { cursor: not-allowed; opacity: .55; }
+.camera-help { margin: 12px 0 0; color: var(--eco-muted); font-size: .78rem; }
+.camera-status-panel h2 { margin: 0 0 20px; font-size: 1.12rem; font-weight: 700; }
+.camera-state-row { display: flex; flex-direction: column; gap: 5px; padding: 14px 0; border-top: 1px solid var(--eco-border); font-size: .84rem; }
+.camera-state-row span { color: var(--eco-muted); }
+.camera-state-row strong { overflow-wrap: anywhere; }
+.camera-message { margin-top: 14px; padding: 13px; border-radius: 10px; color: #59634c; background: #fbfcf7; font-size: .83rem; }
+.camera-message-error { color: #a42424; background: #fde9e8; }
+
 @media (max-width: 767.98px) {
   .page-shell { padding-top: 30px; padding-bottom: 40px; }
   .page-heading { align-items: flex-start; flex-direction: column; gap: 16px; }
-  .dashboard-grid, .bin-grid { grid-template-columns: 1fr; }
+  .dashboard-grid, .bin-grid, .camera-grid { grid-template-columns: 1fr; }
   .section-heading { align-items: flex-start; flex-direction: column; gap: 7px; }
   .panel { padding: 20px; }
   .bin-card { padding: 20px; }
+  .camera-frame { min-height: 210px; }
 }

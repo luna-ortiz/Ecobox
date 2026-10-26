@@ -1,0 +1,36 @@
+@model IReadOnlyList<Ecobox.ViewModels.RegistroResiduoViewModel>
+@{
+    ViewData["Title"] = "Historial";
+}
+
+<div class="container-xl page-shell">
+    <section class="page-heading">
+        <div><p class="eyebrow">REGISTROS DEL SISTEMA</p><h1>Historial de residuos</h1><p class="heading-copy">Cantidades agrupadas por fecha y caneca.</p></div>
+        <a class="btn btn-eco btn-outline-eco" asp-controller="Dashboard" asp-action="Index">Volver al dashboard</a>
+    </section>
+    <div class="data-notice notice-connected" role="status"><span class="notice-dot" aria-hidden="true"></span><span>Historial guardado en la base local SQLite.</span></div>
+    <section class="panel history-panel">
+        @if (Model.Count == 0)
+        {
+            <div class="history-empty"><span aria-hidden="true">▤</span><h2>Aún no hay registros</h2><p>Los totales aparecerán aquí cuando el modelo clasifique residuos correctamente. La cámara no registra imágenes si el modelo no está disponible.</p></div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table history-table align-middle mb-0">
+                    <thead><tr><th>Fecha</th><th>Caneca</th><th>Cantidad</th></tr></thead>
+                    <tbody>
+                    @foreach (var registro in Model)
+                    {
+                        <tr>
+                            <td>@registro.Fecha.ToString("dd/MM/yyyy")</td>
+                            <td><span class="category-pill @(registro.Caneca == Ecobox.Models.CategoriaResiduo.APROVECHABLE ? "category-green" : "category-blue")">@registro.NombreCaneca</span></td>
+                            <td>@registro.Cantidad</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </section>
+</div>

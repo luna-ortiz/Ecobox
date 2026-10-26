@@ -1,0 +1,42 @@
+@model Ecobox.ViewModels.CamaraViewModel
+@{
+    ViewData["Title"] = "Cámara";
+}
+
+<div class="container-xl page-shell camera-page" id="cameraStation" data-classify-url="@Url.Action("Clasificar", "Camara")">
+    <section class="page-heading">
+        <div><p class="eyebrow">ESTACIÓN DE CAPTURA</p><h1>Cámara EcoBox</h1><p class="heading-copy">Vista independiente del dashboard para la webcam del computador.</p></div>
+    </section>
+
+    <div class="data-notice notice-pending" role="status">
+        <span class="notice-dot" aria-hidden="true"></span>
+        <span>La cámara solo funciona mientras esta página esté abierta. El navegador puede limitar procesos en segundo plano; no se garantiza vigilancia continua 24/7.</span>
+    </div>
+
+    <section class="camera-grid" aria-label="Estación de cámara">
+        <article class="panel camera-panel">
+            <div class="panel-heading"><div><p class="eyebrow">VISTA EN VIVO</p><h2>Webcam del computador</h2></div><span id="cameraStatusBadge" class="status-pill status-empty">APAGADA</span></div>
+            <div class="camera-frame"><video id="cameraVideo" autoplay playsinline muted aria-label="Video en vivo de la webcam"></video><div id="cameraPlaceholder" class="camera-placeholder"><span aria-hidden="true">◉</span><p>La cámara está apagada</p></div></div>
+            <div class="camera-controls">
+                <button class="btn btn-eco" id="startCamera" type="button">Iniciar cámara</button>
+                <button class="btn btn-light-eco" id="captureFrame" type="button" disabled>Capturar imagen</button>
+                <button class="btn btn-light-eco" id="stopCamera" type="button" disabled>Detener cámara</button>
+            </div>
+            <p class="camera-help">El navegador solicitará permiso para usar la webcam. La captura se procesa en memoria y no se guarda como archivo.</p>
+            <canvas id="captureCanvas" class="visually-hidden"></canvas>
+        </article>
+
+        <aside class="panel camera-status-panel">
+            <div><p class="eyebrow">ESTADO DEL PROCESO</p><h2>Clasificación</h2></div>
+            <div class="camera-state-row"><span>Detección</span><strong id="detectionStatus">@Model.EstadoDeteccion</strong></div>
+            <div class="camera-state-row"><span>Última clasificación</span><strong id="lastClassification">@Model.UltimaClasificacion</strong></div>
+            <div class="camera-state-row"><span>Confianza</span><strong id="lastConfidence">@Model.UltimaConfianza</strong></div>
+            <div id="cameraMessage" class="camera-message" role="status">La detección automática de presencia y el modelo de IA todavía no están integrados.</div>
+        </aside>
+    </section>
+    <form id="cameraAntiforgery" class="visually-hidden">@Html.AntiForgeryToken()</form>
+</div>
+
+@section Scripts {
+    <script src="~/js/camara.js" asp-append-version="true"></script>
+}

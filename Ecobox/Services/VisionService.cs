@@ -11,7 +11,7 @@ public sealed class VisionService : IVisionService
         return Task.FromResult(new VisionResult
         {
             Exito = false,
-            Mensaje = "El modelo de visión aún no está integrado. La imagen no fue clasificada ni registrada."
+            Mensaje = "Modelo no disponible. La imagen no se clasificó ni se registró."
         });
     }
 }

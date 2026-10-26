@@ -1,6 +1,6 @@
 /*
  * Esqueleto del protocolo serial EcoBox.
- * No se definen pines, servos, sensores, placa ni puerto COM hasta confirmar el hardware.
+ * No se definen pines, servos, sensores ni placa hasta confirmar el hardware.
  * Las respuestas LISTO solo deben habilitarse cuando la acción física esté implementada.
  */
 
@@ -26,12 +26,6 @@ void loop() {
 void procesarComando(const String& comando) {
   if (comando == "APROVECHABLE" || comando == "NO_APROVECHABLE") {
     // No confirmar LISTO antes de integrar el mecanismo físico correspondiente.
-    Serial.println("ERROR");
-    return;
-  }
-
-  if (comando == "RESIDUO_DETECTADO") {
-    // El origen de la detección depende del hardware que se defina posteriormente.
     Serial.println("ERROR");
     return;
   }
