@@ -10,8 +10,14 @@ public sealed class ArduinoService(IOptions<ArduinoSettings> options, ILogger<Ar
 {
     public Task<ArduinoResult> EnviarClasificacionAsync(string clasificacion, CancellationToken cancellationToken = default)
     {
-        var command = clasificacion.Trim().ToUpperInvariant();
-        if (command is not "APROVECHABLE" and not "NO_APROVECHABLE")
+        var category = clasificacion.Trim().ToUpperInvariant();
+        var command = category switch
+        {
+            "APROVECHABLE" => 'A',
+            "NO_APROVECHABLE" => 'N',
+            _ => '\0'
+        };
+        if (command == '\0')
         {
             return Task.FromResult(new ArduinoResult
             {
@@ -27,7 +33,7 @@ public sealed class ArduinoService(IOptions<ArduinoSettings> options, ILogger<Ar
             return Task.FromResult(new ArduinoResult
             {
                 Exito = false,
-                Comando = command,
+                Comando = category,
                 Mensaje = "Arduino no está conectado: configura Arduino:Port cuando se defina el puerto."
             });
         }
@@ -42,19 +48,18 @@ public sealed class ArduinoService(IOptions<ArduinoSettings> options, ILogger<Ar
                 WriteTimeout = 2000
             };
             serialPort.Open();
+            if (cancellationToken.WaitHandle.WaitOne(TimeSpan.FromSeconds(2)))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+            }
             serialPort.DiscardInBuffer();
-            serialPort.WriteLine(command);
-            var response = serialPort.ReadLine().Trim();
+            serialPort.Write(command.ToString());
 
             return Task.FromResult(new ArduinoResult
             {
-                Exito = response == "LISTO",
-                Comando = command,
-                Mensaje = response == "LISTO"
-                    ? "Arduino confirmó la recepción."
-                    : response == "ERROR"
-                        ? "Arduino respondió ERROR."
-                        : $"Respuesta serial inesperada: {response}"
+                Exito = true,
+                Comando = category,
+                Mensaje = $"Comando {command} enviado a Arduino."
             });
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or InvalidOperationException or ArgumentException or TimeoutException)
@@ -63,7 +68,7 @@ public sealed class ArduinoService(IOptions<ArduinoSettings> options, ILogger<Ar
             return Task.FromResult(new ArduinoResult
             {
                 Exito = false,
-                Comando = command,
+                Comando = category,
                 Mensaje = "No se pudo comunicar con Arduino. Revisa el puerto y el protocolo serial."
             });
         }

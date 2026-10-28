@@ -17,7 +17,11 @@ public sealed class ClasificacionResiduoService(
         var vision = await visionService.ClasificarAsync(imagen, cancellationToken);
         if (!vision.Exito || string.IsNullOrWhiteSpace(vision.Categoria))
         {
-            return new ClasificacionResiduoResult { Mensaje = vision.Mensaje };
+            return new ClasificacionResiduoResult
+            {
+                Confianza = vision.Confianza,
+                Mensaje = vision.Mensaje
+            };
         }
 
         if (!Enum.TryParse<CategoriaResiduo>(vision.Categoria, true, out var categoria) || !Enum.IsDefined(categoria))

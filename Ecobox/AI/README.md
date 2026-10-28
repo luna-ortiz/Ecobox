@@ -1,5 +1,5 @@
 # Visión artificial EcoBox
 
-La ruta `/Camara` usa la webcam del computador con `navigator.mediaDevices.getUserMedia()`. La vista es independiente del dashboard y ofrece iniciar/detener la cámara y enviar una captura temporal para clasificar. El navegador debe conceder permiso de cámara.
+La ruta `/Camara` usa la webcam del computador con `navigator.mediaDevices.getUserMedia()`. La vista ofrece iniciar/detener la cámara y enviar una captura temporal para clasificar. Python ejecuta `AI/Python/classify.py` con TensorFlow/Keras y el modelo `AI/Python/ecobox_modelo.keras`; el preprocesamiento conserva BGR→RGB y resize a 224×224. Una confianza menor que el umbral no registra residuos ni envía comandos al Arduino.
 
-La detección automática de presencia y el modelo TensorFlow/Keras todavía no están integrados. `VisionService` responde `Modelo no disponible`; no guarda la imagen ni registra cantidades. El modelo se entrenará externamente en Google Colab y su formato/runtime se definirá al integrarlo. No se entrena dentro de ASP.NET.
+Instala las dependencias indicadas en `AI/Python/requirements.txt` en el entorno de Python configurado en `appsettings.json`. Las rutas de script y modelo, el ejecutable Python y el umbral se configuran en `Vision`. El servicio C# guarda cada captura temporalmente para inferencia y la elimina al terminar. La cámara no clasifica en continuo.

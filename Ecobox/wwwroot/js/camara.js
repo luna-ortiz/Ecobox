@@ -91,7 +91,9 @@
             const result = await response.json();
             if (!response.ok) throw new Error(result.mensaje ?? "No se pudo procesar la captura.");
 
-            classification.textContent = result.categoria ?? "Sin clasificación";
+            classification.textContent = result.categoria
+                ? result.categoria.replaceAll("_", " ")
+                : result.mensaje?.toLowerCase().includes("confianza insuficiente") ? "Confianza insuficiente" : "Sin clasificación";
             confidence.textContent = result.confianza == null ? "—" : `${(result.confianza * 100).toFixed(1)} %`;
             detection.textContent = result.registrada ? "Residuo clasificado" : "Esperando residuo...";
             setMessage(result.mensaje, !result.exito);

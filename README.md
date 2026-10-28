@@ -19,6 +19,6 @@ En Visual Studio, selecciona `Ecobox` como proyecto de inicio y ejecútalo. Al i
 - `/Historial`: filas agregadas por fecha y caneca. `/Residuo` se conserva como alias.
 - `/Camara`: abre en otra pestaña desde la navegación y permite iniciar/detener la webcam y capturar una imagen para procesarla.
 
-La cámara requiere permiso del navegador y solo está activa mientras se use esta página. La detección automática de presencia y el modelo TensorFlow/Keras todavía no están integrados; en ese estado una captura muestra `Modelo no disponible` y no escribe registros ni imágenes.
+La cámara requiere permiso del navegador y solo está activa mientras se use esta página. Para habilitar la clasificación real instala `Ecobox/AI/Python/requirements.txt` en Python y revisa las rutas del modelo, script y ejecutable en `appsettings.json`. Capturas con confianza menor al umbral no se registran ni accionan Arduino.
 
 El Arduino se configura en `appsettings.json`. `Arduino:Port` está vacío hasta definir el puerto real; no hay pines ni servos fijados en el código.
