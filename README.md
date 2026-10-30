@@ -17,8 +17,8 @@ En Visual Studio, selecciona `Ecobox` como proyecto de inicio y ejecútalo. Al i
 
 - `/Dashboard`: totales acumulados por categoría.
 - `/Historial`: filas agregadas por fecha y caneca. `/Residuo` se conserva como alias.
-- `/Camara`: abre en otra pestaña desde la navegación y permite iniciar/detener la webcam y capturar una imagen para procesarla.
+- `/Camara`: estación independiente que abre en otra pestaña e inicia automáticamente la webcam y el análisis.
 
-La cámara requiere permiso del navegador y solo está activa mientras se use esta página. Para habilitar la clasificación real instala `Ecobox/AI/Python/requirements.txt` en Python y revisa las rutas del modelo, script y ejecutable en `appsettings.json`. Capturas con confianza menor al umbral no se registran ni accionan Arduino.
+La cámara requiere permiso del navegador. Cambios de escena detectados en frames muestreados activan inferencia; Python permanece como proceso persistente con el modelo cargado una vez. La clasificación necesita confianza suficiente y estabilidad en varios frames; cada residuo se registra una vez y el sistema espera a que se retire antes de rearmar. Consulta `Ecobox/AI/README.md` para dependencias y configuración.
 
-El Arduino se configura en `appsettings.json`. `Arduino:Port` está vacío hasta definir el puerto real; no hay pines ni servos fijados en el código.
+El Arduino se configura en `appsettings.json`. `Arduino:Port` está vacío hasta definir el puerto real; el sketch `Ecobox/Arduino/EcoBoxArduino/EcoBoxArduino.ino` recibe `A` y `N`. La clasificación y el registro funcionan aunque el puerto no esté configurado.

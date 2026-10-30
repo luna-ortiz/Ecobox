@@ -32,9 +32,12 @@ builder.Services.Configure<ArduinoSettings>(builder.Configuration.GetSection(Ard
 
 builder.Services.AddScoped<IRegistroResiduoService, RegistroResiduoService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
-builder.Services.AddScoped<IVisionService, VisionService>();
+builder.Services.AddSingleton<VisionService>();
+builder.Services.AddSingleton<IVisionService>(services => services.GetRequiredService<VisionService>());
+builder.Services.AddSingleton<IHostedService>(services => services.GetRequiredService<VisionService>());
 builder.Services.AddScoped<IArduinoService, ArduinoService>();
 builder.Services.AddScoped<IPresenceDetectionService, PresenceDetectionService>();
+builder.Services.AddSingleton<IDetectionGateService, DetectionGateService>();
 builder.Services.AddScoped<IClasificacionResiduoService, ClasificacionResiduoService>();
 
 var app = builder.Build();

@@ -8,7 +8,7 @@ public sealed class PresenceDetectionService : IPresenceDetectionService
     public PresenceDetectionResult GetCurrentState() => new()
     {
         ResiduoDetectado = false,
-        Mensaje = "Esperando residuo... La detección de presencia todavía no está implementada."
+        Mensaje = "Calibrando el fondo de la cámara…"
     };
 
     public Task<PresenceDetectionResult> DetectAsync(ReadOnlyMemory<byte> frame, CancellationToken cancellationToken = default) =>

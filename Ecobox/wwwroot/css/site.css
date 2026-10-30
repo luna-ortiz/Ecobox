@@ -188,6 +188,8 @@ a { color: var(--eco-green); }
 .camera-panel, .camera-status-panel { min-width: 0; }
 .camera-frame { position: relative; display: grid; min-height: 280px; margin-top: 22px; overflow: hidden; place-items: center; border: 1px solid #e4ebe6; border-radius: 13px; background: #17211b; aspect-ratio: 16 / 9; }
 .camera-frame video { display: block; width: 100%; height: 100%; object-fit: contain; }
+.camera-roi-guide { position: absolute; left: var(--roi-left, 15%); top: var(--roi-top, 15%); width: var(--roi-width, 70%); height: var(--roi-height, 70%); border: 3px solid #b9ef69; border-radius: 12px; box-shadow: 0 0 0 9999px rgb(10 20 12 / 18%); pointer-events: none; }
+.camera-roi-guide span { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); padding: 5px 10px; border-radius: 999px; background: rgb(15 42 26 / 82%); color: #fff; font-size: .78rem; font-weight: 700; white-space: nowrap; }
 .camera-placeholder { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #e1eae3; text-align: center; }
 .camera-placeholder[hidden] { display: none; }
 .camera-placeholder span { color: #94b69a; font-size: 2.2rem; }
