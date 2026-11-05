@@ -1,9 +1,7 @@
 @model Ecobox.ViewModels.DashboardViewModel
 @{
     ViewData["Title"] = "Dashboard";
-    var escala = Math.Max(Model.TotalAprovechables, Model.TotalNoAprovechables);
-    var porcentajeAprovechables = escala == 0 ? 0 : (int)Math.Round(Model.TotalAprovechables * 100d / escala);
-    var porcentajeNoAprovechables = escala == 0 ? 0 : (int)Math.Round(Model.TotalNoAprovechables * 100d / escala);
+    var etiquetaMensaje = TempData["TipoMensajeCapacidad"]?.ToString() == "danger" ? "danger" : "success";
 }
 
 <div class="container-xl page-shell dashboard-page">
@@ -20,7 +18,12 @@
         <span>@Model.MensajeBaseDatos</span>
     </div>
 
-    <section class="dashboard-grid" aria-label="Resumen EcoBox">
+    @if (TempData["MensajeCapacidad"] is string mensajeCapacidad)
+    {
+        <div class="alert alert-@etiquetaMensaje" role="status">@mensajeCapacidad</div>
+    }
+
+    <section class="dashboard-grid" aria-label="Resumen de EcoBox">
         <article class="panel latest-panel">
             <div class="panel-heading">
                 <div><p class="eyebrow">ACTIVIDAD RECIENTE</p><h2>Último registro</h2></div>
@@ -30,8 +33,7 @@
             {
                 <div class="empty-latest">
                     <span class="empty-symbol" aria-hidden="true">◇</span>
-                    <p>No hay residuos registrados todavía.</p>
-                    <span>Cuando la cámara tenga un modelo de clasificación, los registros aparecerán aquí.</span>
+                    <p>Aún no hay registros recientes.</p>
                 </div>
             }
             else
@@ -46,11 +48,11 @@
 
         <article class="panel total-panel">
             <div class="panel-heading">
-                <div><p class="eyebrow">REGISTROS ACUMULADOS</p><h2>Total de residuos</h2></div>
+                <div><p class="eyebrow">OCUPACIÓN TOTAL</p><h2>Total de residuos</h2></div>
                 <span class="icon-tile icon-blue" aria-hidden="true">▤</span>
             </div>
             <div class="total-number">@Model.TotalResiduos</div>
-            <p class="muted-copy">Cantidad acumulada en SQLite</p>
+            <p class="muted-copy">Unidades actualmente ocupadas en ambas canecas</p>
             <div class="total-breakdown">
                 <div><span class="legend-dot legend-green"></span><span>Aprovechables</span><strong>@Model.TotalAprovechables</strong></div>
                 <div><span class="legend-dot legend-blue"></span><span>No aprovechables</span><strong>@Model.TotalNoAprovechables</strong></div>
@@ -58,44 +60,40 @@
         </article>
     </section>
 
-    <section class="bins-section">
+    <section class="bins-section physical-capacity-section" aria-label="Canecas y capacidad física">
         <div class="section-heading">
-            <div><p class="eyebrow">CANTIDADES ACUMULADAS</p><h2>Residuos por caneca</h2></div>
-            <span class="section-note">Conteo total, sin sensor de nivel</span>
+            <div><p class="eyebrow">CAPACIDAD FÍSICA</p><h2>Ocupación de las canecas</h2></div>
+            <span class="section-note">Capacidad máxima individual: 50 unidades</span>
         </div>
         <div class="bin-grid">
-            <article class="panel bin-card">
-                <div class="bin-card-top">
-                    <span class="bin-icon bin-icon-green" aria-hidden="true">
-                        <svg viewBox="0 0 48 48" fill="none"><path d="M12 16h24l-2 25H14l-2-25Z" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><path d="M9 12h30M19 12V8h10v4m-7 9v14m6-14v14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><path d="M24 5c-4 3.1-5.2 6-3.6 8.1 1.6 2.1 5.2 1.7 7.5-.2C30.3 11.1 28.4 7.9 24 5Z" fill="currentColor"/></svg>
-                    </span>
-                    <span class="status-pill status-ready">APROVECHABLE</span>
-                </div>
-                <h3>Caneca aprovechable</h3>
-                <p class="bin-subtitle">Materiales que pueden recuperarse</p>
-                <div class="bin-count"><strong>@Model.TotalAprovechables</strong><span>residuos registrados</span></div>
-                <div class="capacity-label"><span>Escala comparativa de registros</span><strong>@Model.TotalAprovechables</strong></div>
-                <div class="progress eco-progress" role="progressbar" aria-label="Escala comparativa de residuos aprovechables" aria-valuenow="@porcentajeAprovechables" aria-valuemin="0" aria-valuemax="100">
-                    <div class="progress-bar progress-green" style="width: @porcentajeAprovechables%"></div>
-                </div>
-            </article>
-
-            <article class="panel bin-card">
-                <div class="bin-card-top">
-                    <span class="bin-icon bin-icon-blue" aria-hidden="true">
-                        <svg viewBox="0 0 48 48" fill="none"><path d="M12 16h24l-2 25H14l-2-25Z" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><path d="M9 12h30M19 12V8h10v4m-7 9v14m6-14v14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><path d="M24 5c-4 3.1-5.2 6-3.6 8.1 1.6 2.1 5.2 1.7 7.5-.2C30.3 11.1 28.4 7.9 24 5Z" fill="currentColor"/></svg>
-                    </span>
-                    <span class="status-pill category-blue">NO_APROVECHABLE</span>
-                </div>
-                <h3>Caneca no aprovechable</h3>
-                <p class="bin-subtitle">Residuos que no se pueden recuperar</p>
-                <div class="bin-count"><strong>@Model.TotalNoAprovechables</strong><span>residuos registrados</span></div>
-                <div class="capacity-label"><span>Escala comparativa de registros</span><strong>@Model.TotalNoAprovechables</strong></div>
-                <div class="progress eco-progress" role="progressbar" aria-label="Escala comparativa de residuos no aprovechables" aria-valuenow="@porcentajeNoAprovechables" aria-valuemin="0" aria-valuemax="100">
-                    <div class="progress-bar progress-blue" style="width: @porcentajeNoAprovechables%"></div>
-                </div>
-            </article>
+            @foreach (var ocupacion in Model.OcupacionesCanecas.OrderBy(item => item.Caneca))
+            {
+                var esAprovechable = ocupacion.Caneca == Ecobox.Models.CategoriaResiduo.APROVECHABLE;
+                var nombreCaneca = esAprovechable ? "Caneca aprovechable" : "Caneca no aprovechable";
+                var color = esAprovechable ? "green" : "blue";
+                var claseEstado = ocupacion.UnidadesActuales == 0 ? "status-empty"
+                    : ocupacion.UnidadesActuales == ocupacion.CapacidadMaxima ? "status-danger"
+                    : ocupacion.UnidadesActuales >= 45 ? "status-warning" : "status-ready";
+                <article class="panel bin-card physical-bin-card">
+                    <div class="bin-card-top">
+                        <span class="bin-icon bin-icon-@color" aria-hidden="true">
+                            <svg viewBox="0 0 48 48" fill="none"><path d="M12 16h24l-2 25H14l-2-25Z" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/><path d="M9 12h30M19 12V8h10v4m-7 9v14m6-14v14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><path d="M24 5c-4 3.1-5.2 6-3.6 8.1 1.6 2.1 5.2 1.7 7.5-.2C30.3 11.1 28.4 7.9 24 5Z" fill="currentColor"/></svg>
+                        </span>
+                        <span class="status-pill @claseEstado">@ocupacion.Estado</span>
+                    </div>
+                    <h3>@nombreCaneca</h3>
+                    <div class="bin-count"><strong>@ocupacion.UnidadesActuales/@ocupacion.CapacidadMaxima</strong><span>unidades de ocupación</span></div>
+                    <div class="capacity-label"><span>Porcentaje ocupado</span><strong>@ocupacion.PorcentajeOcupacion%</strong></div>
+                    <div class="progress eco-progress" role="progressbar" aria-label="Ocupación de @nombreCaneca" aria-valuenow="@ocupacion.PorcentajeOcupacion" aria-valuemin="0" aria-valuemax="100">
+                        <div class="progress-bar progress-@color" style="width: @ocupacion.PorcentajeOcupacion%"></div>
+                    </div>
+                    <div class="capacity-label remaining-capacity"><span>Unidades restantes</span><strong>@ocupacion.UnidadesRestantes</strong></div>
+                    <form asp-controller="Dashboard" asp-action="VaciarCaneca" method="post" class="empty-bin-form" onsubmit="return confirm('¿Confirmas que deseas vaciar la caneca @nombreCaneca? Se conservarán sus registros anteriores.');">
+                        <input type="hidden" name="caneca" value="@ocupacion.Caneca" />
+                        <button type="submit" class="btn btn-outline-secondary btn-sm" disabled="@(ocupacion.UnidadesActuales == 0)">Vaciar esta caneca</button>
+                    </form>
+                </article>
+            }
         </div>
-        <p class="estimate-disclaimer"><span aria-hidden="true">ⓘ</span> Las barras solo comparan las cantidades registradas; no representan el nivel físico de las canecas.</p>
     </section>
 </div>

@@ -72,6 +72,8 @@ public sealed class CamaraController(
             registrada = resultado.RegistroGuardado,
             estado = resultado.Estado,
             razon = resultado.Razon,
+            ocupacionActual = resultado.OcupacionActual,
+            capacidadMaxima = resultado.CapacidadMaxima,
             categoria = resultado.Categoria?.ToString(),
             confianza = resultado.Confianza,
             mensaje = resultado.Mensaje

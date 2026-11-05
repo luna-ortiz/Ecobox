@@ -1,16 +1,46 @@
-@model IReadOnlyList<Ecobox.ViewModels.RegistroResiduoViewModel>
+@model Ecobox.ViewModels.HistorialViewModel
 @{
     ViewData["Title"] = "Historial";
 }
 
 <div class="container-xl page-shell">
     <section class="page-heading">
-        <div><p class="eyebrow">REGISTROS DEL SISTEMA</p><h1>Historial de residuos</h1><p class="heading-copy">Cantidades agrupadas por fecha y caneca.</p></div>
+        <div><p class="eyebrow">REGISTROS DEL SISTEMA</p><h1>Historial de residuos</h1><p class="heading-copy">Registros agrupados por ciclo, fecha y caneca.</p></div>
         <a class="btn btn-eco btn-outline-eco" asp-controller="Dashboard" asp-action="Index">Volver al dashboard</a>
     </section>
     <div class="data-notice notice-connected" role="status"><span class="notice-dot" aria-hidden="true"></span><span>Historial guardado en la base local SQLite.</span></div>
+    <section class="bins-section history-cycles-section">
+        <div class="section-heading"><div><p class="eyebrow">CICLOS DE LLENADO</p><h2>Ciclos actuales y anteriores</h2></div></div>
+        @if (Model.Ciclos.Count == 0)
+        {
+            <div class="panel history-empty"><span aria-hidden="true">▤</span><h2>Aún no hay ciclos</h2><p>Al iniciar la aplicación se crea un ciclo independiente para cada caneca.</p></div>
+        }
+        else
+        {
+            <div class="table-responsive panel history-panel">
+                <table class="table history-table align-middle mb-0">
+                    <thead><tr><th>Ciclo</th><th>Caneca</th><th>Inicio</th><th>Cierre</th><th>Unidades registradas</th><th>Estado</th></tr></thead>
+                    <tbody>
+                    @foreach (var ciclo in Model.Ciclos)
+                    {
+                        <tr>
+                            <td>#@ciclo.Id</td>
+                            <td>@(ciclo.Caneca == Ecobox.Models.CategoriaResiduo.APROVECHABLE ? "Aprovechable" : "No aprovechable")</td>
+                            <td>@ciclo.IniciadoEn.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>@(ciclo.FinalizadoEn?.ToLocalTime().ToString("dd/MM/yyyy HH:mm") ?? "—")</td>
+                            <td>@ciclo.UnidadesRegistradas</td>
+                            <td>@(ciclo.FinalizadoEn is null ? "Actual" : "Cerrado")</td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </section>
+
     <section class="panel history-panel">
-        @if (Model.Count == 0)
+        <div class="section-heading history-records-heading"><div><p class="eyebrow">TODOS LOS CICLOS</p><h2>Registros conservados</h2></div></div>
+        @if (Model.Registros.Count == 0)
         {
             <div class="history-empty"><span aria-hidden="true">▤</span><h2>Aún no hay registros</h2><p>Los totales aparecerán aquí cuando el modelo clasifique residuos correctamente. La cámara no registra imágenes si el modelo no está disponible.</p></div>
         }
@@ -18,11 +48,12 @@
         {
             <div class="table-responsive">
                 <table class="table history-table align-middle mb-0">
-                    <thead><tr><th>Fecha</th><th>Caneca</th><th>Cantidad</th></tr></thead>
+                    <thead><tr><th>Ciclo</th><th>Fecha</th><th>Caneca</th><th>Cantidad</th></tr></thead>
                     <tbody>
-                    @foreach (var registro in Model)
+                    @foreach (var registro in Model.Registros)
                     {
                         <tr>
+                            <td>#@registro.CicloId</td>
                             <td>@registro.Fecha.ToString("dd/MM/yyyy")</td>
                             <td><span class="category-pill @(registro.Caneca == Ecobox.Models.CategoriaResiduo.APROVECHABLE ? "category-green" : "category-blue")">@registro.NombreCaneca</span></td>
                             <td>@registro.Cantidad</td>

@@ -7,6 +7,7 @@ public sealed class RegistroResiduoViewModel
     public DateOnly Fecha { get; init; }
     public CategoriaResiduo Caneca { get; init; }
     public int Cantidad { get; init; }
+    public int CicloId { get; init; }
 
     public string NombreCaneca => Caneca == CategoriaResiduo.APROVECHABLE
         ? "Aprovechable"
@@ -16,6 +17,7 @@ public sealed class RegistroResiduoViewModel
     {
         Fecha = registro.Fecha,
         Caneca = registro.Caneca,
-        Cantidad = registro.Cantidad
+        Cantidad = registro.Cantidad,
+        CicloId = registro.CicloId
     };
 }

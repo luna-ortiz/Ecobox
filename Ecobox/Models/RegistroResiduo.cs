@@ -10,6 +10,8 @@ public sealed class RegistroResiduo
 
     public CategoriaResiduo Caneca { get; set; }
 
+    public int CicloId { get; set; }
+
     [Range(1, int.MaxValue)]
     public int Cantidad { get; set; }
 }

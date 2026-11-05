@@ -1,3 +1,4 @@
 <Solution>
   <Project Path="Ecobox/Ecobox.csproj" />
+  <Project Path="Ecobox.CapacityTests/Ecobox.CapacityTests.csproj" />
 </Solution>

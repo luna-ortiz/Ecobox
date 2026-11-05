@@ -167,6 +167,14 @@ a { color: var(--eco-green); }
 .progress-green { background: var(--eco-green-bright); }
 .progress-blue { background: var(--eco-blue); }
 .capacity-footnote { margin: 9px 0 0; font-size: .72rem; }
+.physical-capacity-section .physical-bin-card h3 { margin: 0; }
+.cycle-count-details { display: grid; grid-template-columns: 1fr auto; gap: 8px 14px; margin-top: 15px; padding-top: 13px; border-top: 1px solid var(--eco-border); font-size: .8rem; }
+.cycle-count-details span { color: var(--eco-muted); }
+.cycle-count-details strong { text-align: right; }
+.empty-bin-form { display: flex; justify-content: flex-end; margin-top: 16px; }
+.physical-capacity-section .alert { margin-bottom: 14px; }
+.history-cycles-section .history-panel { padding: 0; }
+.history-records-heading { margin: 0; padding: 18px 20px; }
 .estimate-disclaimer { display: flex; align-items: flex-start; gap: 8px; margin: 14px 2px 0; color: #68786e; font-size: .78rem; }
 .history-panel { padding: 0; overflow: hidden; }
 .history-empty { display: flex; min-height: 300px; flex-direction: column; align-items: center; justify-content: center; padding: 30px; text-align: center; }

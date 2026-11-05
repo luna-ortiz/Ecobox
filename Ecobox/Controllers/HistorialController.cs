@@ -11,6 +11,11 @@ public sealed class HistorialController(IRegistroResiduoService registroService)
     public async Task<IActionResult> Index(CancellationToken cancellationToken)
     {
         var registros = await registroService.ObtenerHistorialAsync(cancellationToken);
-        return View(registros.Select(RegistroResiduoViewModel.Desde).ToList());
+        var ciclos = await registroService.ObtenerCiclosAsync(cancellationToken);
+        return View(new HistorialViewModel
+        {
+            Registros = registros.Select(RegistroResiduoViewModel.Desde).ToList(),
+            Ciclos = ciclos
+        });
     }
 }

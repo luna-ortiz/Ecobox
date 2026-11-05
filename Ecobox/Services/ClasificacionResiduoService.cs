@@ -88,6 +88,22 @@ public sealed class ClasificacionResiduoService(
             // Once confirmed, finish the local transaction even if the browser request disconnects.
             await registroService.RegistrarAsync(categoria, cancellationToken: CancellationToken.None);
         }
+        catch (CanecaLlenaException exception)
+        {
+            detectionGate.CancelPendingRegistration();
+            logger.LogWarning("CAPACIDAD_RECHAZADA: caneca={Category}, ocupación={Occupied}/{Capacity}, solicitadas={Requested}; no hubo registro ni comando Arduino.",
+                exception.Caneca, exception.OcupacionActual, ReglasCapacidadCaneca.CapacidadMaxima, exception.CantidadSolicitada);
+            return new ClasificacionResiduoResult
+            {
+                Estado = "caneca_llena",
+                Razon = "capacidad_maxima",
+                Categoria = categoria,
+                Confianza = vision.Confianza,
+                OcupacionActual = exception.OcupacionActual,
+                CapacidadMaxima = ReglasCapacidadCaneca.CapacidadMaxima,
+                Mensaje = "Caneca llena. Se requiere vaciarla para continuar."
+            };
+        }
         catch (OperationCanceledException)
         {
             detectionGate.CancelPendingRegistration();

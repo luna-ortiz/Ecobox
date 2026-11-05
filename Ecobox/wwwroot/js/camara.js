@@ -34,6 +34,7 @@
     let pendingCandidate = false;
     let clearFrames = 0;
     let registeredLatch = false;
+    let capacityBlockedLatch = false;
     let requestActive = false;
     let pageClosing = false;
     let retryTimer = null;
@@ -168,7 +169,14 @@
             if (result.confianza != null) confidence.textContent = `${(result.confianza * 100).toFixed(1)} %`;
             setMessage(result.mensaje, result.mensaje?.toLowerCase().includes("insuficiente") ?? false);
 
-            if (result.registrada) {
+            if (result.estado === "caneca_llena") {
+                registeredLatch = true;
+                capacityBlockedLatch = true;
+                pendingCandidate = false;
+                clearFrames = 0;
+                detection.textContent = "Caneca llena · retira el residuo";
+                setMessage("Caneca llena. Se requiere vaciarla para continuar.", true);
+            } else if (result.registrada) {
                 registeredLatch = true;
                 pendingCandidate = false;
                 clearFrames = 0;
@@ -229,6 +237,7 @@
             const response = await fetch(station.dataset.rearmUrl, { method: "POST", body: formData });
             if (!response.ok) throw new Error("No se pudo rearmar la detección.");
             registeredLatch = false;
+            capacityBlockedLatch = false;
             heldSample = null;
             heldRetryAt = 0;
             pendingCandidate = false;
@@ -258,7 +267,10 @@
                 if (changedRatio < presenceThreshold * 0.65) clearFrames++;
                 else clearFrames = 0;
 
-                detection.textContent = "Residuo registrado · retíralo para continuar";
+                detection.textContent = capacityBlockedLatch
+                    ? "Caneca llena · retira el residuo"
+                    : "Residuo registrado · retíralo para continuar";
+                if (capacityBlockedLatch) setMessage("Caneca llena. Se requiere vaciarla para continuar.", true);
                 if (clearFrames >= stableFramesRequired) await rearmDetection(current);
             } else if (changedRatio >= presenceThreshold) {
                 if (!changeDetected) {

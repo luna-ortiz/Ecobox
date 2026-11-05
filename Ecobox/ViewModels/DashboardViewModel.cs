@@ -7,4 +7,5 @@ public sealed class DashboardViewModel
     public int TotalAprovechables { get; init; }
     public int TotalNoAprovechables { get; init; }
     public string MensajeBaseDatos { get; init; } = string.Empty;
+    public IReadOnlyList<Ecobox.Services.Results.CanecaOcupacionResult> OcupacionesCanecas { get; init; } = [];
 }
