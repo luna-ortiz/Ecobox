@@ -75,6 +75,10 @@ var cases = new (string Name, Func<Task> Run)[]
     ("avisa al llegar a 45/50", NearFull),
     ("acepta exactamente la unidad 50", ReachesCapacity),
     ("rechaza clasificación llena sin historial ni Arduino", FullStopsPipeline),
+    ("mapea clasificaciones a las líneas seriales A y N", ArduinoCommandMapping),
+    ("envía un único comando solo tras confirmar y registrar", AcceptedRegistrationSendsOneCommand),
+    ("no envía comando si falla SQLite", RegistrationFailureDoesNotSend),
+    ("un error serial conserva el registro confirmado", ArduinoFailurePreservesRegistration),
     ("rechaza cantidades que sobrepasan el límite", RejectsOverflow),
     ("cada caneca tiene capacidad independiente", IndependentBins),
     ("vaciar conserva y cierra el ciclo anterior", EmptyPreservesHistory),
@@ -147,12 +151,71 @@ static async Task FullStopsPipeline() => await WithDb(async (db, service) =>
     var classifier = new ClasificacionResiduoService(vision, service, arduino, settings, gate, NullLogger<ClasificacionResiduoService>.Instance);
     await using var first = new MemoryStream([1]);
     await classifier.ProcesarImagenAsync(first);
+    Equal(0, arduino.Calls);
     await using var second = new MemoryStream([1]);
     var response = await classifier.ProcesarImagenAsync(second);
     Equal("caneca_llena", response.Estado);
     Equal(50, (await Occupancy(service, CategoriaResiduo.APROVECHABLE)).UnidadesActuales);
     Equal(historyCount, (await service.ObtenerHistorialAsync()).Count);
     Equal(0, arduino.Calls);
+});
+
+static Task ArduinoCommandMapping()
+{
+    Equal("A\n", ArduinoService.MapearComandoSerial("APROVECHABLE")!);
+    Equal("A\n", ArduinoService.MapearComandoSerial("aprovechable")!);
+    Equal("A\n", ArduinoService.MapearComandoSerial("A")!);
+    Equal("N\n", ArduinoService.MapearComandoSerial("NO_APROVECHABLE")!);
+    Equal("N\n", ArduinoService.MapearComandoSerial("NO APROVECHABLE")!);
+    Equal("N\n", ArduinoService.MapearComandoSerial("no_aprovechable")!);
+    Equal("N\n", ArduinoService.MapearComandoSerial("N")!);
+    True(ArduinoService.MapearComandoSerial("OTRA") is null, "Se aceptó una categoría no válida.");
+    return Task.CompletedTask;
+}
+
+static async Task AcceptedRegistrationSendsOneCommand() => await WithDb(async (db, service) =>
+{
+    var settings = Options.Create(new VisionSettings { ConfidenceThreshold = 0.7, StableFramesRequired = 2 });
+    var arduino = new CountingArduino();
+    var gate = new DetectionGateService(settings, NullLogger<DetectionGateService>.Instance);
+    var classifier = new ClasificacionResiduoService(new FixedVision(), service, arduino, settings, gate, NullLogger<ClasificacionResiduoService>.Instance);
+    await using var first = new MemoryStream([1]);
+    var pending = await classifier.ProcesarImagenAsync(first);
+    Equal("primer_frame", pending.Estado);
+    Equal(0, arduino.Calls);
+    await using var second = new MemoryStream([1]);
+    var accepted = await classifier.ProcesarImagenAsync(second);
+    True(accepted.RegistroGuardado, "El residuo confirmado no se registró.");
+    Equal(1, arduino.Calls);
+    Equal(1, (await service.ObtenerHistorialAsync()).Sum(row => row.Cantidad));
+});
+
+static async Task RegistrationFailureDoesNotSend()
+{
+    var settings = Options.Create(new VisionSettings { ConfidenceThreshold = 0.7, StableFramesRequired = 2 });
+    var arduino = new CountingArduino();
+    var gate = new DetectionGateService(settings, NullLogger<DetectionGateService>.Instance);
+    var classifier = new ClasificacionResiduoService(new FixedVision(), new FailingRegistrationService(), arduino, settings, gate, NullLogger<ClasificacionResiduoService>.Instance);
+    await using var first = new MemoryStream([1]);
+    await classifier.ProcesarImagenAsync(first);
+    await using var second = new MemoryStream([1]);
+    var failed = await classifier.ProcesarImagenAsync(second);
+    Equal("error_registro", failed.Estado);
+    Equal(0, arduino.Calls);
+}
+
+static async Task ArduinoFailurePreservesRegistration() => await WithDb(async (db, service) =>
+{
+    var settings = Options.Create(new VisionSettings { ConfidenceThreshold = 0.7, StableFramesRequired = 2 });
+    var gate = new DetectionGateService(settings, NullLogger<DetectionGateService>.Instance);
+    var classifier = new ClasificacionResiduoService(new FixedVision(), service, new UnavailableArduino(), settings, gate, NullLogger<ClasificacionResiduoService>.Instance);
+    await using var first = new MemoryStream([1]);
+    await classifier.ProcesarImagenAsync(first);
+    await using var second = new MemoryStream([1]);
+    var result = await classifier.ProcesarImagenAsync(second);
+    True(result.RegistroGuardado, "El resultado reportó perdido el registro después del fallo serial.");
+    Equal(1, (await service.ObtenerHistorialAsync()).Sum(row => row.Cantidad));
+    Equal(1, (await Occupancy(service, CategoriaResiduo.APROVECHABLE)).UnidadesActuales);
 });
 
 static async Task RejectsOverflow() => await WithDb(async (db, service) =>
@@ -357,4 +420,23 @@ sealed class CountingArduino : IArduinoService
         Calls++;
         return Task.FromResult(new ArduinoResult { Exito = true });
     }
+}
+
+sealed class FailingRegistrationService : IRegistroResiduoService
+{
+    public Task<IReadOnlyList<RegistroResiduo>> ObtenerHistorialAsync(CancellationToken cancellationToken = default) =>
+        Task.FromResult<IReadOnlyList<RegistroResiduo>>([]);
+    public Task<RegistroResiduo> RegistrarAsync(CategoriaResiduo caneca, int cantidad = 1, DateOnly? fecha = null, CancellationToken cancellationToken = default) =>
+        Task.FromException<RegistroResiduo>(new InvalidOperationException("SQLite simulated failure"));
+    public Task<IReadOnlyList<CanecaOcupacionResult>> ObtenerOcupacionesAsync(CancellationToken cancellationToken = default) =>
+        Task.FromResult<IReadOnlyList<CanecaOcupacionResult>>([]);
+    public Task<IReadOnlyList<CicloCanecaResult>> ObtenerCiclosAsync(CancellationToken cancellationToken = default) =>
+        Task.FromResult<IReadOnlyList<CicloCanecaResult>>([]);
+    public Task VaciarAsync(CategoriaResiduo caneca, CancellationToken cancellationToken = default) => Task.CompletedTask;
+}
+
+sealed class UnavailableArduino : IArduinoService
+{
+    public Task<ArduinoResult> EnviarClasificacionAsync(string clasificacion, CancellationToken cancellationToken = default) =>
+        Task.FromResult(new ArduinoResult { Exito = false, Mensaje = "Puerto ocupado o ESP32 desconectado." });
 }
